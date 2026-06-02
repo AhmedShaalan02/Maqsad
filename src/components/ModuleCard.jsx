@@ -5,36 +5,29 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
-export default function ModuleCard({ name, description, accent, icon }) {
+export default function ModuleCard({ name, description, accent, icon, onClick }) {
   return (
     <button
-      className="w-full text-left rounded-2xl p-4 flex flex-col gap-3 transition-all duration-150 active:scale-95 cursor-pointer"
+      onClick={onClick}
+      className="w-full text-left rounded-2xl p-4 flex flex-col gap-3 transition-all duration-150 active:scale-95"
       style={{
         backgroundColor: hexToRgba(accent, 0.07),
         border: `1px solid ${hexToRgba(accent, 0.18)}`,
+        cursor: onClick ? 'pointer' : 'default',
       }}
     >
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{
-          backgroundColor: hexToRgba(accent, 0.14),
-          color: accent,
-        }}
+        style={{ backgroundColor: hexToRgba(accent, 0.14), color: accent }}
       >
         {icon}
       </div>
 
       <div className="flex flex-col gap-0.5">
-        <p
-          className="font-semibold text-sm leading-snug"
-          style={{ color: '#1C1410' }}
-        >
+        <p className="font-semibold text-sm leading-snug" style={{ color: '#1C1410' }}>
           {name}
         </p>
-        <p
-          className="text-xs leading-relaxed"
-          style={{ color: 'rgba(28, 20, 16, 0.5)' }}
-        >
+        <p className="text-xs leading-relaxed" style={{ color: 'rgba(28, 20, 16, 0.5)' }}>
           {description}
         </p>
       </div>

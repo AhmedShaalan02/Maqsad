@@ -61,6 +61,7 @@ export const modules = [
     description: 'Recitation, tajweed & tafseer',
     accent: '#6B1F2A',
     icon: <BookIcon />,
+    path: '/quran',
   },
   {
     id: 'hadith',
