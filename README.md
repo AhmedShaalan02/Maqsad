@@ -1,0 +1,2 @@
+# Maqsad
+Islamic learning app
