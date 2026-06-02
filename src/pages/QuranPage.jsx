@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import surahData from '../data/surahs.json'
 
 const MODES = ['Tafseer', 'Hifz', 'Tilawah']
 const AYAAT_OPTIONS = [5, 10, 20, 'All']
@@ -21,7 +22,6 @@ function SurahRow({ surah, selected, onSelect }) {
         backgroundColor: selected ? 'rgba(107, 31, 42, 0.06)' : 'transparent',
       }}
     >
-      {/* Surah number badge */}
       <div
         className="flex-shrink-0 w-9 h-7 rounded-lg flex items-center justify-center font-bold"
         style={{
@@ -33,7 +33,6 @@ function SurahRow({ surah, selected, onSelect }) {
         {surah.id}
       </div>
 
-      {/* English name + translation */}
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm leading-snug" style={{ color: '#1C1410' }}>
           {surah.name_simple}
@@ -43,7 +42,6 @@ function SurahRow({ surah, selected, onSelect }) {
         </p>
       </div>
 
-      {/* Arabic name + verse count */}
       <div className="text-right flex-shrink-0">
         <p
           className="text-sm font-medium leading-snug"
@@ -59,61 +57,13 @@ function SurahRow({ surah, selected, onSelect }) {
   )
 }
 
-function SurahSkeleton() {
-  return (
-    <>
-      {Array.from({ length: 14 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-3 px-4 py-3 animate-pulse"
-          style={{ borderBottom: '1px solid rgba(28, 20, 16, 0.06)' }}
-        >
-          <div
-            className="flex-shrink-0 w-9 h-7 rounded-lg"
-            style={{ backgroundColor: 'rgba(28, 20, 16, 0.08)' }}
-          />
-          <div className="flex-1">
-            <div className="h-3.5 rounded-md w-28 mb-2" style={{ backgroundColor: 'rgba(28, 20, 16, 0.08)' }} />
-            <div className="h-2.5 rounded-md w-20" style={{ backgroundColor: 'rgba(28, 20, 16, 0.05)' }} />
-          </div>
-          <div className="text-right">
-            <div className="h-3.5 rounded-md w-16 mb-2 ml-auto" style={{ backgroundColor: 'rgba(28, 20, 16, 0.08)' }} />
-            <div className="h-2.5 rounded-md w-10 ml-auto" style={{ backgroundColor: 'rgba(28, 20, 16, 0.05)' }} />
-          </div>
-        </div>
-      ))}
-    </>
-  )
-}
-
 export default function QuranPage() {
   const navigate = useNavigate()
   const [mode, setMode] = useState('Tafseer')
-  const [surahs, setSurahs] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
   const [selectedSurah, setSelectedSurah] = useState(null)
   const [ayaatCount, setAyaatCount] = useState(10)
 
-  const fetchSurahs = () => {
-    setLoading(true)
-    setError(false)
-    fetch('https://api.quran.com/api/v4/chapters?language=en')
-      .then(r => {
-        if (!r.ok) throw new Error('fetch failed')
-        return r.json()
-      })
-      .then(data => {
-        setSurahs(data.chapters)
-        setLoading(false)
-      })
-      .catch(() => {
-        setError(true)
-        setLoading(false)
-      })
-  }
-
-  useEffect(() => { fetchSurahs() }, [])
+  const surahs = surahData.chapters
 
   const handleSurahSelect = surah => {
     setSelectedSurah(prev => (prev?.id === surah.id ? null : surah))
@@ -168,24 +118,7 @@ export default function QuranPage() {
 
       {/* ── Surah list ── */}
       <div className="flex-1 overflow-y-auto">
-        {loading && <SurahSkeleton />}
-
-        {error && (
-          <div className="flex flex-col items-center justify-center h-full gap-3">
-            <p className="text-sm" style={{ color: 'rgba(28, 20, 16, 0.45)' }}>
-              Could not load surahs.
-            </p>
-            <button
-              onClick={fetchSurahs}
-              className="px-5 py-2 rounded-full text-sm font-semibold"
-              style={{ backgroundColor: '#6B1F2A', color: '#FAF7F2' }}
-            >
-              Try again
-            </button>
-          </div>
-        )}
-
-        {!loading && !error && surahs.map(surah => (
+        {surahs.map(surah => (
           <SurahRow
             key={surah.id}
             surah={surah}
@@ -200,7 +133,6 @@ export default function QuranPage() {
         className="flex-shrink-0 px-4 pt-3 pb-8"
         style={{ borderTop: '1px solid rgba(28, 20, 16, 0.08)', backgroundColor: '#FAF7F2' }}
       >
-        {/* Ayaat selector */}
         <div className="flex items-center gap-2.5 mb-3">
           <span
             className="text-xs font-semibold uppercase tracking-wider flex-shrink-0"
@@ -226,7 +158,6 @@ export default function QuranPage() {
           </div>
         </div>
 
-        {/* Begin Session */}
         <button
           className="w-full py-3.5 rounded-2xl font-semibold text-sm tracking-wide transition-all"
           style={{
@@ -234,6 +165,9 @@ export default function QuranPage() {
             color: selectedSurah ? '#FAF7F2' : 'rgba(250, 247, 242, 0.7)',
           }}
           disabled={!selectedSurah}
+          onClick={() => selectedSurah && navigate('/quran/session', {
+            state: { surah: selectedSurah, ayaatCount, mode },
+          })}
         >
           {selectedSurah
             ? `Begin Session · ${selectedSurah.name_simple}`
