@@ -36,6 +36,40 @@ const quranApiPlugin = {
   },
 }
 
+const sunnahApiPlugin = {
+  name: 'sunnah-api-proxy',
+  configureServer(server) {
+    server.middlewares.use('/api/sunnah', (req, res) => {
+      const path = req.url ?? '/'
+      console.log('[sunnah proxy] →', `https://api.sunnah.com${path}`)
+
+      https
+        .get(
+          {
+            hostname: 'api.sunnah.com',
+            path,
+            headers: {
+              Accept: 'application/json',
+              'x-api-key': 'SqD712P3E82xnwOAEOkGd5JZH8s9wRR24TqNFzjk',
+            },
+          },
+          upstream => {
+            res.writeHead(upstream.statusCode, {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+            })
+            upstream.pipe(res)
+          }
+        )
+        .on('error', err => {
+          console.error('[sunnah proxy] error:', err.message)
+          res.writeHead(502)
+          res.end(JSON.stringify({ error: err.message }))
+        })
+    })
+  },
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), quranApiPlugin],
+  plugins: [react(), tailwindcss(), quranApiPlugin, sunnahApiPlugin],
 })

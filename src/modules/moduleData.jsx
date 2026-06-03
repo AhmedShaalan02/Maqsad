@@ -69,6 +69,7 @@ export const modules = [
     description: 'Browse and study prophetic narrations from the 6 major collections, organised by topic or collection',
     accent: '#C4973A',
     icon: <FeatherIcon />,
+    path: '/hadith',
   },
   {
     id: 'seerah',
