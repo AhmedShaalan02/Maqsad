@@ -34,13 +34,8 @@ const DATE_DB = {
   // ── Shawwal ──
   '10_1': [{ name: 'Eid al-Fitr', arabic: 'عيد الفطر', type: 'eid',
               desc: "The celebration of breaking the fast after Ramadan — a day of gratitude, charity (Zakat al-Fitr), prayer, and joy with family and community." }],
-  '10_2': [{ name: 'Six Days of Shawwal', arabic: 'ست شوال', type: 'fast',
-              desc: "Fasting any six days of Shawwal after Eid is like fasting the entire year, according to the Prophet ﷺ." }],
-  '10_3': [{ name: 'Six Days of Shawwal', arabic: 'ست شوال', type: 'fast', desc: '' }],
-  '10_4': [{ name: 'Six Days of Shawwal', arabic: 'ست شوال', type: 'fast', desc: '' }],
-  '10_5': [{ name: 'Six Days of Shawwal', arabic: 'ست شوال', type: 'fast', desc: '' }],
-  '10_6': [{ name: 'Six Days of Shawwal', arabic: 'ست شوال', type: 'fast', desc: '' }],
-  '10_7': [{ name: 'Six Days of Shawwal', arabic: 'ست شوال', type: 'fast', desc: '' }],
+  // Days 2-7 of Shawwal — built programmatically below
+
 
   // ── Dhul Qa'dah ──
   '11_1': [{ name: "First of Dhul Qa'dah", arabic: "أول ذي القعدة", type: 'month',
@@ -61,10 +56,19 @@ const DATE_DB = {
               desc: "The greatest day of the year. The Prophet ﷺ said: 'There is no day on which Allah frees more people from the Fire than the Day of Arafah.' Fasting expiates two years of sins." }],
   '12_10': [{ name: 'Eid al-Adha', arabic: 'عيد الأضحى', type: 'eid',
                desc: "The Festival of Sacrifice, commemorating Ibrahim's (AS) willingness to sacrifice his son. A day of prayer, gratitude, and sharing with the poor." }],
-  '12_11': [{ name: 'Days of Tashreeq', arabic: 'أيام التشريق', type: 'special',
-               desc: "The days of Tashreeq are days of eating, drinking, and remembering Allah — prohibited for fasting." }],
-  '12_12': [{ name: 'Days of Tashreeq', arabic: 'أيام التشريق', type: 'special', desc: '' }],
-  '12_13': [{ name: 'Days of Tashreeq', arabic: 'أيام التشريق', type: 'special', desc: '' }],
+  // Days 11-13 of Dhul Hijjah — built programmatically below
+}
+
+// Six Days of Shawwal (days 2-7) — fasting after Eid
+for (let d = 2; d <= 7; d++) {
+  DATE_DB[`10_${d}`] = [{ name: 'Six Days of Shawwal', arabic: 'ست شوال', type: 'fast',
+    desc: d === 2 ? "Fasting any six days of Shawwal after Eid is like fasting the entire year, according to the Prophet ﷺ." : '' }]
+}
+
+// Days of Tashreeq (Dhul Hijjah 11-13)
+for (let d = 11; d <= 13; d++) {
+  DATE_DB[`12_${d}`] = [{ name: 'Days of Tashreeq', arabic: 'أيام التشريق', type: 'special',
+    desc: d === 11 ? "The days of Tashreeq are days of eating, drinking, and remembering Allah — prohibited for fasting." : '' }]
 }
 
 // First day of every Hijri month

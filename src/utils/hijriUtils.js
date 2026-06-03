@@ -37,3 +37,8 @@ export function formatGregorian(date = new Date()) {
 export function dateKey(date = new Date()) {
   return date.toISOString().slice(0, 10)
 }
+
+/** Parses a dateKey string back to a Date (midnight local time). */
+export function parseDateKey(key) {
+  return new Date(key + 'T00:00:00')
+}

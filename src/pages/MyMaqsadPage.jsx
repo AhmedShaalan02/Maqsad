@@ -5,6 +5,8 @@ import {
   getSavedQuranVerses, deleteQuranVerse,
   getSavedHadiths, deleteSavedHadith,
 } from '../utils/myMaqsadStorage'
+import { parseDateKey } from '../utils/hijriUtils'
+import { gradeStyle } from '../utils/gradeUtils'
 import surahData from '../data/surahs.json'
 
 const chapters = surahData.chapters
@@ -77,7 +79,7 @@ function Section({ icon, title, count, children, placeholder, initialOpen = fals
 // ── Daily theme item ──────────────────────────────────────────────────────────
 
 function DailyThemeItem({ theme, onDelete }) {
-  const date = new Date(theme.dateKey + 'T00:00:00')
+  const date = parseDateKey(theme.dateKey)
   const label = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
 
   return (
@@ -149,9 +151,7 @@ function QuranVerseItem({ verse, onDelete }) {
 function HadithItem({ item, onDelete }) {
   const h = item.hadith
   const grade = h?.grade
-  const gradeStyle = grade?.toLowerCase().includes('sahih')
-    ? { bg: 'rgba(74,103,65,0.1)', color: '#2D6A4F' }
-    : { bg: 'rgba(196,151,58,0.1)', color: '#9A7020' }
+  const gs = gradeStyle(grade)
 
   return (
     <div className="px-4 py-3">
@@ -165,7 +165,7 @@ function HadithItem({ item, onDelete }) {
             <span className="text-xs font-mono" style={{ color: 'rgba(28,20,16,0.32)' }}>{h?.reference}</span>
             {grade && (
               <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: gradeStyle.bg, color: gradeStyle.color }}>
+                style={{ backgroundColor: gs.bg, color: gs.color }}>
                 {grade}
               </span>
             )}

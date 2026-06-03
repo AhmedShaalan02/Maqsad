@@ -55,6 +55,9 @@ export const COLLECTIONS = [
   },
 ]
 
+/** Maps collection ID → display name, derived from COLLECTIONS. */
+export const COLLECTION_LABELS = Object.fromEntries(COLLECTIONS.map(c => [c.id, c.name]))
+
 export const TOPICS = [
   {
     id: 'faith',

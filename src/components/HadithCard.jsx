@@ -7,6 +7,8 @@ import {
   getCollections,
   createCollection,
 } from '../utils/hadithStorage'
+import { gradeStyle } from '../utils/gradeUtils'
+import GoldDivider from './GoldDivider'
 
 // ── Local Storage ─────────────────────────────────────────────────────────────
 
@@ -19,19 +21,6 @@ function getNoteData(key) {
 
 function saveNoteData(key, data) {
   try { localStorage.setItem(`maqsad_hadith_v1_${key}`, JSON.stringify(data)) } catch {}
-}
-
-// ── Grade Badge ───────────────────────────────────────────────────────────────
-
-function gradeStyle(grade) {
-  const g = (grade || '').toLowerCase()
-  if (g.includes('sahih'))
-    return { bg: 'rgba(74,103,65,0.14)', color: '#2D6A4F', border: 'rgba(74,103,65,0.28)' }
-  if (g.includes('hasan'))
-    return { bg: 'rgba(196,151,58,0.14)', color: '#9A7020', border: 'rgba(196,151,58,0.3)' }
-  if (g.includes('da') || g.includes('weak'))
-    return { bg: 'rgba(139,32,32,0.1)', color: '#8B2020', border: 'rgba(139,32,32,0.22)' }
-  return { bg: 'rgba(28,20,16,0.07)', color: 'rgba(28,20,16,0.5)', border: 'rgba(28,20,16,0.12)' }
 }
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -220,17 +209,6 @@ function MiniHadithCard({ hadith }) {
   )
 }
 
-// ── Gold Divider ──────────────────────────────────────────────────────────────
-
-function GoldDivider() {
-  return (
-    <div className="flex items-center gap-3 mx-4 my-1">
-      <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(196,151,58,0.25)' }} />
-      <div className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: '#C4973A' }} />
-      <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(196,151,58,0.25)' }} />
-    </div>
-  )
-}
 
 // ── Main HadithCard ───────────────────────────────────────────────────────────
 

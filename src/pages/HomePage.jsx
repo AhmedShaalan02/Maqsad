@@ -6,7 +6,9 @@ import SupportStrip from '../components/SupportStrip'
 import Highlight from '../components/Highlight'
 import { modules } from '../modules/moduleData'
 import surahData from '../data/surahs.json'
-import { COLLECTIONS, TOPICS } from '../data/hadithData'
+import { COLLECTIONS, TOPICS, COLLECTION_LABELS } from '../data/hadithData'
+import { gradeStyle } from '../utils/gradeUtils'
+import GoldDivider from '../components/GoldDivider'
 import { getCollections, getItemsInCollection } from '../utils/hadithStorage'
 import { getHijriDate, formatGregorian, dateKey } from '../utils/hijriUtils'
 import { getIslamicSignificance } from '../data/islamicDates'
@@ -152,16 +154,6 @@ function DailyHeader() {
 
 // ── Daily Theme Cards ─────────────────────────────────────────────────────────
 
-function GoldDivider() {
-  return (
-    <div className="flex items-center gap-2 mx-5 my-2">
-      <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(196,151,58,0.25)' }} />
-      <div className="w-1 h-1 rounded-full" style={{ backgroundColor: '#C4973A' }} />
-      <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(196,151,58,0.25)' }} />
-    </div>
-  )
-}
-
 function VerseCard({ verse, surahNum }) {
   const surah = chapters.find(c => c.id === surahNum)
   return (
@@ -197,9 +189,7 @@ function VerseCard({ verse, surahNum }) {
 
 function HadithCardDaily({ hadith }) {
   const grade = hadith?.grade
-  const gs = grade?.toLowerCase().includes('sahih')
-    ? { bg: 'rgba(74,103,65,0.12)', color: '#2D6A4F', border: 'rgba(74,103,65,0.28)' }
-    : { bg: 'rgba(196,151,58,0.12)', color: '#9A7020', border: 'rgba(196,151,58,0.28)' }
+  const gs = gradeStyle(grade)
 
   return (
     <div className="h-full flex flex-col px-5 py-4">
@@ -269,7 +259,7 @@ function ContextCard({ theme, themeArabic, context }) {
 }
 
 function ReflectionCard({ question, dateKey: dk }) {
-  const stored = (() => { try { const d = getDailyTheme(dk); return d?.reflection || '' } catch { return '' } })()
+  const stored = getDailyTheme(dk)?.reflection || ''
   const [text, setText] = useState(stored)
   const [saved, setSaved] = useState(!!stored)
 
@@ -332,10 +322,9 @@ function buildQuiz(theme, surahNum, hadith) {
   }
 
   if (hadith?.collection) {
-    const colLabels = { bukhari: 'Sahih Bukhari', muslim: 'Sahih Muslim', tirmidhi: "Jami' at-Tirmidhi", abudawud: 'Sunan Abu Dawud', ibnmajah: 'Sunan Ibn Majah', nasai: "Sunan an-Nasa'i" }
     const opts = [
-      { text: colLabels[hadith.collection], correct: true },
-      ...wrongCols.map(c => ({ text: colLabels[c], correct: false })),
+      { text: COLLECTION_LABELS[hadith.collection], correct: true },
+      ...wrongCols.map(c => ({ text: COLLECTION_LABELS[c], correct: false })),
     ].sort(() => Math.random() - 0.5)
     questions.push({ q: 'Which collection contains today\'s hadith?', options: opts })
   }
@@ -450,13 +439,10 @@ function DailyThemeSection() {
     setError(null)
     try {
       // Get last 7 theme names to avoid repetition
-      const recent = []
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i)
-        if (k?.startsWith('maqsad_daily_') && k !== `maqsad_daily_${dk}`) {
-          try { const d = JSON.parse(localStorage.getItem(k)); if (d?.theme) recent.push(d.theme) } catch {}
-        }
-      }
+      const recent = getAllDailyThemes()
+        .filter(t => t.dateKey !== dk && t.theme)
+        .slice(0, 7)
+        .map(t => t.theme)
 
       const userMsg = `Today's Hijri date: ${hijri || 'unknown'}. Recent themes to avoid: ${recent.slice(0, 7).join(', ') || 'none'}. Generate today's theme.`
 
@@ -523,7 +509,10 @@ function DailyThemeSection() {
   const cardWidth = containerRef.current?.offsetWidth || 300
   const translateX = -currentCard * 100 + (dragOffset / cardWidth) * 100
 
-  const quiz = theme ? buildQuiz(theme.theme, theme.surahNumber, theme.hadith) : []
+  const quiz = useMemo(
+    () => theme ? buildQuiz(theme.theme, theme.surahNumber, theme.hadith) : [],
+    [theme]
+  )
 
   return (
     <div className="px-0 py-4">
