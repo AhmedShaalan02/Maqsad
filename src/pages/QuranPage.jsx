@@ -5,10 +5,10 @@ import surahData from '../data/surahs.json'
 const MODES = ['Tafseer', 'Hifz', 'Tilawah']
 const AYAAT_OPTIONS = [5, 10, 20, 'All']
 const TAFSEER_OPTIONS = [
-  { id: 169, name: 'Ibn Kathir' },
-  { id: 16,  name: 'Al-Muyassar' },
-  { id: 168, name: "Ma'arif al-Qur'an" },
-  { id: 91,  name: 'Al-Sa\'di' },
+  { id: 169, name: 'Ibn Kathir',                  sublabel: null,          arabic: false },
+  { id: 74,  name: 'Tafsir al-Jalalayn',          sublabel: null,          arabic: true  },
+  { id: 168, name: 'Maariful Quran',              sublabel: 'Mufti Shafi', arabic: false },
+  { id: 131, name: 'Al-Muyassar',                 sublabel: null,          arabic: true  },
 ]
 
 const BackArrowIcon = () => (
@@ -141,28 +141,49 @@ export default function QuranPage() {
         style={{ borderTop: '1px solid rgba(28, 20, 16, 0.08)', backgroundColor: '#FAF7F2' }}
       >
         {mode === 'Tafseer' && (
-          <div className="flex items-center gap-2.5 mb-3">
+          <div className="mb-3">
             <span
-              className="text-xs font-semibold uppercase tracking-wider flex-shrink-0"
+              className="text-xs font-semibold uppercase tracking-wider"
               style={{ color: 'rgba(28, 20, 16, 0.4)' }}
             >
               Tafseer
             </span>
-            <div className="flex gap-1.5 flex-wrap">
-              {TAFSEER_OPTIONS.map(opt => (
-                <button
-                  key={opt.id}
-                  onClick={() => setSelectedTafseer(opt)}
-                  className="px-3 py-1 rounded-full text-xs font-semibold transition-all"
-                  style={
-                    selectedTafseer.id === opt.id
-                      ? { backgroundColor: '#6B1F2A', color: '#FAF7F2' }
-                      : { backgroundColor: 'rgba(107, 31, 42, 0.08)', color: 'rgba(28, 20, 16, 0.55)' }
-                  }
-                >
-                  {opt.name}
-                </button>
-              ))}
+            <div className="flex flex-col gap-1.5 mt-2">
+              {TAFSEER_OPTIONS.map(opt => {
+                const active = selectedTafseer.id === opt.id
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => setSelectedTafseer(opt)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all text-left"
+                    style={
+                      active
+                        ? { backgroundColor: '#6B1F2A', color: '#FAF7F2' }
+                        : { backgroundColor: 'rgba(107, 31, 42, 0.08)', color: 'rgba(28, 20, 16, 0.7)' }
+                    }
+                  >
+                    <span>{opt.name}</span>
+                    {opt.sublabel && (
+                      <span style={{ opacity: active ? 0.7 : 0.5, fontWeight: 400 }}>
+                        · {opt.sublabel}
+                      </span>
+                    )}
+                    {opt.arabic && (
+                      <span
+                        className="ml-auto rounded px-1.5 py-0.5 text-xs font-bold"
+                        style={{
+                          backgroundColor: active ? 'rgba(250,247,242,0.18)' : 'rgba(107,31,42,0.12)',
+                          color: active ? 'rgba(250,247,242,0.85)' : '#6B1F2A',
+                          fontSize: '10px',
+                          letterSpacing: '0.03em',
+                        }}
+                      >
+                        Arabic
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           </div>
         )}
