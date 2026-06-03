@@ -11,6 +11,8 @@
     "download:tafseer": "node scripts/downloadTafseer.js"
   },
   "dependencies": {
+    "adhan": "^4.4.3",
+    "hijri-date-converter": "^1.0.2",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.16.0"

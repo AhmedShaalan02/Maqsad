@@ -15,7 +15,7 @@ export const COLLECTIONS = [
     author: 'Imam Muslim ibn al-Hajjaj',
     count: 7500,
     description:
-      'Second only to Bukhari in authenticity. Renowned for its meticulous organisation and grouping of chains of narration.',
+      'Second only to Bukhari in authenticity. Renowned for its meticulous organization and grouping of chains of narration.',
   },
   {
     id: 'tirmidhi',

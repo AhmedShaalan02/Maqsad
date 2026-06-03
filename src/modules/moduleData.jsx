@@ -58,7 +58,7 @@ export const modules = [
   {
     id: 'quran',
     name: 'Quran',
-    description: 'Explore, study and memorise the Quran. Three modes: Tafseer (card study), Hifz (memorisation), Tilawah (recitation scroll)',
+    description: 'Explore, study and memorize the Quran. Three modes: Tafseer (card study), Hifz (memorization), Tilawah (recitation scroll)',
     accent: '#6B1F2A',
     icon: <BookIcon />,
     path: '/quran',
@@ -66,7 +66,7 @@ export const modules = [
   {
     id: 'hadith',
     name: 'Hadith',
-    description: 'Browse and study prophetic narrations from the 6 major collections, organised by topic or collection',
+    description: 'Browse and study prophetic narrations from the 6 major collections, organized by topic or collection',
     accent: '#C4973A',
     icon: <FeatherIcon />,
     path: '/hadith',
@@ -81,7 +81,7 @@ export const modules = [
   {
     id: 'fiqh',
     name: 'Fiqh',
-    description: 'Islamic jurisprudence organised by topic, showing rulings across all 4 madhabs side by side',
+    description: 'Islamic jurisprudence organized by topic, showing rulings across all 4 madhabs side by side',
     accent: '#6B1F2A',
     icon: <ScaleIcon />,
   },
