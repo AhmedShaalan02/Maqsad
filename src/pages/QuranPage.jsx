@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useMemo } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import surahData from '../data/surahs.json'
+import Highlight from '../components/Highlight'
 
 const MODES = ['Tafseer', 'Hifz', 'Tilawah']
 const AYAAT_OPTIONS = [5, 10, 20, 'All']
@@ -8,8 +9,10 @@ const TAFSEER_OPTIONS = [
   { id: 169, name: 'Ibn Kathir',     sublabel: 'In depth', arabic: false },
   { id: 168, name: 'Mufti Shafi',    sublabel: 'Detailed', arabic: false },
   { id: 817, name: 'Tazkirul Quran', sublabel: 'Concise',  arabic: false },
-  { id: 91,  name: "Al-Sa’di",  sublabel: null,       arabic: true  },
+  { id: 91,  name: "Al-Sa'di",  sublabel: null,       arabic: true  },
 ]
+
+// ── Icons ─────────────────────────────────────────────────────────────────────
 
 const BackArrowIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -18,7 +21,15 @@ const BackArrowIcon = () => (
   </svg>
 )
 
-function SurahRow({ surah, selected, onSelect }) {
+const SearchIco = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+)
+
+// ── Surah Row ─────────────────────────────────────────────────────────────────
+
+function SurahRow({ surah, selected, query, onSelect }) {
   return (
     <button
       onClick={onSelect}
@@ -41,10 +52,10 @@ function SurahRow({ surah, selected, onSelect }) {
 
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm leading-snug" style={{ color: '#1C1410' }}>
-          {surah.name_simple}
+          <Highlight text={surah.name_simple} query={query} />
         </p>
         <p className="text-xs mt-0.5" style={{ color: 'rgba(28, 20, 16, 0.45)' }}>
-          {surah.translated_name.name}
+          <Highlight text={surah.translated_name.name} query={query} />
         </p>
       </div>
 
@@ -53,7 +64,7 @@ function SurahRow({ surah, selected, onSelect }) {
           className="text-sm font-medium leading-snug"
           style={{ color: '#1C1410', fontFamily: 'Georgia, "Times New Roman", serif' }}
         >
-          {surah.name_arabic}
+          <Highlight text={surah.name_arabic} query={query} />
         </p>
         <p className="text-xs mt-0.5" style={{ color: 'rgba(28, 20, 16, 0.45)' }}>
           {surah.verses_count} ayaat
@@ -63,14 +74,32 @@ function SurahRow({ surah, selected, onSelect }) {
   )
 }
 
+// ── Main Page ─────────────────────────────────────────────────────────────────
+
 export default function QuranPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Accept pre-selected surah from global search navigation
   const [mode, setMode] = useState('Tafseer')
-  const [selectedSurah, setSelectedSurah] = useState(null)
+  const [selectedSurah, setSelectedSurah] = useState(location.state?.preselectSurah ?? null)
   const [ayaatCount, setAyaatCount] = useState(10)
   const [selectedTafseer, setSelectedTafseer] = useState(TAFSEER_OPTIONS[0])
+  const [surahSearch, setSurahSearch] = useState('')
 
   const surahs = surahData.chapters
+
+  // Filter surahs by search query
+  const displayedSurahs = useMemo(() => {
+    const q = surahSearch.trim().toLowerCase()
+    if (!q) return surahs
+    return surahs.filter(s =>
+      s.name_simple.toLowerCase().includes(q) ||
+      s.name_arabic.includes(surahSearch.trim()) ||
+      s.translated_name.name.toLowerCase().includes(q) ||
+      (s.name_complex || '').toLowerCase().includes(q)
+    )
+  }, [surahs, surahSearch])
 
   const handleSurahSelect = surah => {
     setSelectedSurah(prev => (prev?.id === surah.id ? null : surah))
@@ -123,16 +152,64 @@ export default function QuranPage() {
         ))}
       </div>
 
+      {/* ── Surah search ── */}
+      <div
+        className="flex-shrink-0 px-4 py-2"
+        style={{ borderBottom: '1px solid rgba(28,20,16,0.06)' }}
+      >
+        <div
+          className="flex items-center gap-2 px-3 py-2 rounded-xl"
+          style={{ backgroundColor: 'rgba(28,20,16,0.05)', border: '1px solid rgba(28,20,16,0.07)' }}
+        >
+          <span style={{ color: 'rgba(28,20,16,0.38)' }}><SearchIco /></span>
+          <input
+            value={surahSearch}
+            onChange={e => setSurahSearch(e.target.value)}
+            placeholder="Search surahs…"
+            className="flex-1 text-sm bg-transparent outline-none"
+            style={{ color: '#1C1410' }}
+          />
+          {surahSearch && (
+            <button
+              onClick={() => setSurahSearch('')}
+              style={{ color: 'rgba(28,20,16,0.35)' }}
+              aria-label="Clear"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          )}
+          {surahSearch && (
+            <span className="text-xs font-medium ml-1 flex-shrink-0" style={{ color: 'rgba(28,20,16,0.38)' }}>
+              {displayedSurahs.length}
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* ── Surah list ── */}
       <div className="flex-1 overflow-y-auto">
-        {surahs.map(surah => (
-          <SurahRow
-            key={surah.id}
-            surah={surah}
-            selected={selectedSurah?.id === surah.id}
-            onSelect={() => handleSurahSelect(surah)}
-          />
-        ))}
+        {displayedSurahs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <p className="text-sm font-medium mb-1" style={{ color: 'rgba(28,20,16,0.5)' }}>
+              No surahs match "{surahSearch}"
+            </p>
+            <button onClick={() => setSurahSearch('')} className="text-xs mt-2 font-semibold" style={{ color: '#6B1F2A' }}>
+              Clear search
+            </button>
+          </div>
+        ) : (
+          displayedSurahs.map(surah => (
+            <SurahRow
+              key={surah.id}
+              surah={surah}
+              selected={selectedSurah?.id === surah.id}
+              query={surahSearch.trim()}
+              onSelect={() => handleSurahSelect(surah)}
+            />
+          ))
+        )}
       </div>
 
       {/* ── Bottom controls ── */}
