@@ -584,16 +584,11 @@ export default function QuranSessionPage() {
 
       if (mode === 'Tafseer') {
         setLoadingMsg('Loading tafseer…')
-        const tafseerResults = await Promise.all(
-          sliced.map(v =>
-            fetch(`https://api.quran.com/api/v4/tafsirs/${tafseerId}/by_ayah/${v.verse_key}`)
-              .then(r => r.ok ? r.json() : null)
-              .catch(() => null)
-          )
-        )
-        const enriched = sliced.map((v, i) => ({
+        const tafseerLoader = verseModules[`../data/verses/${surah.id}_${tafseerId}.json`]
+        const tafseerMap = tafseerLoader ? (await tafseerLoader()).default : {}
+        const enriched = sliced.map(v => ({
           ...v,
-          tafseer: tafseerResults[i]?.tafsir?.text || null,
+          tafseer: tafseerMap[String(v.verse_number)] || null,
         }))
         setVerses(enriched)
         setDeck(buildDeck(enriched, tafseerName))

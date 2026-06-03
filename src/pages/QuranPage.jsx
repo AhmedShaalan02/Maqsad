@@ -6,9 +6,9 @@ const MODES = ['Tafseer', 'Hifz', 'Tilawah']
 const AYAAT_OPTIONS = [5, 10, 20, 'All']
 const TAFSEER_OPTIONS = [
   { id: 169, name: 'Ibn Kathir' },
-  { id: 131, name: 'Al-Muyassar' },
-  { id: 74,  name: 'Jalalayn' },
-  { id: 170, name: 'Saadi' },
+  { id: 16,  name: 'Al-Muyassar' },
+  { id: 168, name: "Ma'arif al-Qur'an" },
+  { id: 91,  name: 'Al-Sa\'di' },
 ]
 
 const BackArrowIcon = () => (
