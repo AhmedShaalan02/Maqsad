@@ -144,6 +144,47 @@ const hadithLocalPlugin = {
   },
 }
 
+// ── Verse full-text search (indexes all 114 plain verse files) ───────────────
+const verseSearchPlugin = {
+  name: 'verse-search',
+  configureServer(server) {
+    let index = null  // [{ key, surahId, surahName, verseNum, text }]
+
+    const buildIndex = () => {
+      const surahsPath = path.join(__dirname, 'src/data/surahs.json')
+      const surahMap = Object.fromEntries(
+        JSON.parse(fs.readFileSync(surahsPath, 'utf8')).chapters.map(s => [s.id, s])
+      )
+      const versesDir = path.join(__dirname, 'src/data/verses')
+      const result = []
+      for (const file of fs.readdirSync(versesDir).filter(f => /^\d+\.json$/.test(f))) {
+        const surahId = parseInt(file)
+        const surah   = surahMap[surahId]
+        for (const v of JSON.parse(fs.readFileSync(path.join(versesDir, file), 'utf8')).verses || []) {
+          const text = v.translations?.[0]?.text || ''
+          if (text) result.push({ key: v.verse_key, surahId, surahName: surah?.name_simple || '', verseNum: v.verse_number, text })
+        }
+      }
+      return result
+    }
+
+    server.middlewares.use('/api/verse-search', (req, res) => {
+      const u     = new URL(req.url, 'http://localhost')
+      const q     = (u.searchParams.get('q') || '').toLowerCase().trim()
+      const limit = Math.min(parseInt(u.searchParams.get('limit') || '5'), 20)
+
+      const json200 = data => {
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
+        res.end(JSON.stringify(data))
+      }
+
+      if (q.length < 2) return json200([])
+      if (!index) index = buildIndex()
+      json200(index.filter(v => v.text.toLowerCase().includes(q) || v.surahName.toLowerCase().includes(q)).slice(0, limit))
+    })
+  },
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), quranApiPlugin, sunnahApiPlugin, anthropicPlugin, hadithLocalPlugin],
+  plugins: [react(), tailwindcss(), quranApiPlugin, sunnahApiPlugin, anthropicPlugin, hadithLocalPlugin, verseSearchPlugin],
 })
