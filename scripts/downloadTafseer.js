@@ -13,10 +13,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const OUT_DIR = path.join(__dirname, '../src/data/verses')
 
 const TAFSEER_CONFIG = [
-  { id: 169, name: 'Ibn Kathir',         source: 'qurancom', qurancomId: 169 },
-  { id: 74,  name: 'Jalalayn',           source: 'alquran',  edition: 'ar.jalalayn' },
-  { id: 168, name: 'Maariful Quran',     source: 'qurancom', qurancomId: 168 },
-  { id: 131, name: 'Al-Muyassar',        source: 'alquran',  edition: 'ar.muyassar' },
+  { id: 169, name: 'Ibn Kathir',     source: 'qurancom', qurancomId: 169 },
+  { id: 168, name: 'Maariful Quran', source: 'qurancom', qurancomId: 168 },
+  { id: 817, name: 'Tazkirul Quran', source: 'qurancom', qurancomId: 817 },
+  { id: 91,  name: "Al-Sa'di",       source: 'qurancom', qurancomId: 91  },
 ]
 
 function fetchJSON(url) {

@@ -5,10 +5,10 @@ import surahData from '../data/surahs.json'
 const MODES = ['Tafseer', 'Hifz', 'Tilawah']
 const AYAAT_OPTIONS = [5, 10, 20, 'All']
 const TAFSEER_OPTIONS = [
-  { id: 169, name: 'Ibn Kathir',                  sublabel: null,          arabic: false },
-  { id: 74,  name: 'Tafsir al-Jalalayn',          sublabel: null,          arabic: true  },
-  { id: 168, name: 'Maariful Quran',              sublabel: 'Mufti Shafi', arabic: false },
-  { id: 131, name: 'Al-Muyassar',                 sublabel: null,          arabic: true  },
+  { id: 169, name: 'Ibn Kathir',     sublabel: 'In depth', arabic: false },
+  { id: 168, name: 'Mufti Shafi',    sublabel: 'Detailed', arabic: false },
+  { id: 817, name: 'Tazkirul Quran', sublabel: 'Concise',  arabic: false },
+  { id: 91,  name: "Al-Sa’di",  sublabel: null,       arabic: true  },
 ]
 
 const BackArrowIcon = () => (
