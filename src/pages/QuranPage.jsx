@@ -4,6 +4,12 @@ import surahData from '../data/surahs.json'
 
 const MODES = ['Tafseer', 'Hifz', 'Tilawah']
 const AYAAT_OPTIONS = [5, 10, 20, 'All']
+const TAFSEER_OPTIONS = [
+  { id: 169, name: 'Ibn Kathir' },
+  { id: 131, name: 'Al-Muyassar' },
+  { id: 74,  name: 'Jalalayn' },
+  { id: 170, name: 'Saadi' },
+]
 
 const BackArrowIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -62,6 +68,7 @@ export default function QuranPage() {
   const [mode, setMode] = useState('Tafseer')
   const [selectedSurah, setSelectedSurah] = useState(null)
   const [ayaatCount, setAyaatCount] = useState(10)
+  const [selectedTafseer, setSelectedTafseer] = useState(TAFSEER_OPTIONS[0])
 
   const surahs = surahData.chapters
 
@@ -133,6 +140,33 @@ export default function QuranPage() {
         className="flex-shrink-0 px-4 pt-3 pb-8"
         style={{ borderTop: '1px solid rgba(28, 20, 16, 0.08)', backgroundColor: '#FAF7F2' }}
       >
+        {mode === 'Tafseer' && (
+          <div className="flex items-center gap-2.5 mb-3">
+            <span
+              className="text-xs font-semibold uppercase tracking-wider flex-shrink-0"
+              style={{ color: 'rgba(28, 20, 16, 0.4)' }}
+            >
+              Tafseer
+            </span>
+            <div className="flex gap-1.5 flex-wrap">
+              {TAFSEER_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => setSelectedTafseer(opt)}
+                  className="px-3 py-1 rounded-full text-xs font-semibold transition-all"
+                  style={
+                    selectedTafseer.id === opt.id
+                      ? { backgroundColor: '#6B1F2A', color: '#FAF7F2' }
+                      : { backgroundColor: 'rgba(107, 31, 42, 0.08)', color: 'rgba(28, 20, 16, 0.55)' }
+                  }
+                >
+                  {opt.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-2.5 mb-3">
           <span
             className="text-xs font-semibold uppercase tracking-wider flex-shrink-0"
@@ -166,7 +200,7 @@ export default function QuranPage() {
           }}
           disabled={!selectedSurah}
           onClick={() => selectedSurah && navigate('/quran/session', {
-            state: { surah: selectedSurah, ayaatCount, mode },
+            state: { surah: selectedSurah, ayaatCount, mode, tafseerOption: selectedTafseer },
           })}
         >
           {selectedSurah
