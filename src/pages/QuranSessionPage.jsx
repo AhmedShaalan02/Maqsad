@@ -355,6 +355,39 @@ function HifzCard({ verse, onResult, onNext, animDir, isLast, displayMode }) {
 
 // ─── TAFSEER MODE CARDS ───────────────────────────────────────────────────────
 
+function TafseerFallback({ tafseerName }) {
+  const [timedOut, setTimedOut] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 3000)
+    return () => clearTimeout(t)
+  }, [])
+
+  return (
+    <div className="px-6 pb-4">
+      {timedOut ? (
+        <div
+          className="px-3 py-2.5 rounded-xl text-xs"
+          style={{
+            backgroundColor: 'rgba(196,151,58,0.07)',
+            border: '1px solid rgba(196,151,58,0.18)',
+            color: 'rgba(28,20,16,0.45)',
+            lineHeight: '1.6',
+          }}
+        >
+          No tafseer entry available for this verse in {tafseerName}.
+        </div>
+      ) : (
+        <div
+          className="px-3 py-2 rounded-lg text-xs animate-pulse"
+          style={{ backgroundColor: 'rgba(196,151,58,0.07)', color: 'rgba(28,20,16,0.35)' }}
+        >
+          Tafseer loading…
+        </div>
+      )}
+    </div>
+  )
+}
+
 function TafseerCard({ item, surahName, animDir, displayMode, tafseerName }) {
   const { verse } = item
   const translation = cleanText(verse.translations[0].text)
@@ -419,15 +452,24 @@ function TafseerCard({ item, surahName, animDir, displayMode, tafseerName }) {
             <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: '#C4973A' }}>
               Tafseer · {tafseerName}
             </p>
+            {verse.tafseerGrouped && (
+              <div
+                className="mb-3 px-3 py-2.5 rounded-xl text-xs"
+                style={{
+                  backgroundColor: 'rgba(196,151,58,0.07)',
+                  border: '1px solid rgba(196,151,58,0.2)',
+                  color: 'rgba(28,20,16,0.52)',
+                  lineHeight: '1.6',
+                }}
+              >
+                This verse is covered as part of a group commentary in {tafseerName}. Showing the nearest entry (verse {verse.tafseerNearestVerse}).
+              </div>
+            )}
             <p style={{ fontSize: '13px', color: 'rgba(28,20,16,0.65)', lineHeight: '1.8' }}>{tafseer}</p>
           </div>
         </>
       ) : (
-        <div className="px-6 pb-4">
-          <div className="px-3 py-2 rounded-lg text-xs" style={{ backgroundColor: 'rgba(196,151,58,0.07)', color: 'rgba(28,20,16,0.4)' }}>
-            Tafseer loading…
-          </div>
-        </div>
+        <TafseerFallback tafseerName={tafseerName} />
       )}
 
       {/* Notes textarea */}
@@ -586,10 +628,22 @@ export default function QuranSessionPage() {
         setLoadingMsg('Loading tafseer…')
         const tafseerLoader = verseModules[`../data/verses/${surah.id}_${tafseerId}.json`]
         const tafseerMap = tafseerLoader ? (await tafseerLoader()).default : {}
-        const enriched = sliced.map(v => ({
-          ...v,
-          tafseer: tafseerMap[String(v.verse_number)] || null,
-        }))
+        const tafseerKeys = Object.keys(tafseerMap).map(Number).sort((a, b) => a - b)
+        const enriched = sliced.map(v => {
+          const direct = tafseerMap[String(v.verse_number)]
+          if (direct) return { ...v, tafseer: direct, tafseerGrouped: false }
+          if (!tafseerKeys.length) return { ...v, tafseer: null, tafseerGrouped: false }
+          // Find nearest verse that has an entry
+          const nearest = tafseerKeys.reduce((best, k) =>
+            Math.abs(k - v.verse_number) < Math.abs(best - v.verse_number) ? k : best
+          )
+          return {
+            ...v,
+            tafseer: tafseerMap[String(nearest)] || null,
+            tafseerGrouped: true,
+            tafseerNearestVerse: nearest,
+          }
+        })
         setVerses(enriched)
         setDeck(buildDeck(enriched, tafseerName))
       } else if (mode === 'Hifz') {
