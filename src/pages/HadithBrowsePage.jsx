@@ -2,8 +2,11 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import HadithCard from '../components/HadithCard'
 import { getItemsInCollection } from '../utils/hadithStorage'
+import { loadCollection } from '../utils/hadithLoader'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+const PAGE_SIZE = 20
 
 function shuffle(arr) {
   const a = [...arr]
@@ -14,53 +17,18 @@ function shuffle(arr) {
   return a
 }
 
-function cleanHtml(html) {
-  return (html || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
-}
-
-const COLLECTION_LABELS = {
-  bukhari: 'Bukhari',
-  muslim: 'Muslim',
-  tirmidhi: 'Tirmidhi',
-  abudawud: 'Abu Dawud',
-  ibnmajah: 'Ibn Majah',
-  nasai: "Nasa'i",
-}
-
-function parseHadithBody(raw) {
-  const text = cleanHtml(raw)
-  const m1 = text.match(/^Narrated\s+(.+?):\s*(.+)$/s)
-  if (m1) return { narrator: m1[1].trim(), text: m1[2].trim() }
-  const m2 = text.match(/^It was narrated (?:from|that)\s+(.+?):\s*(.+)$/s)
-  if (m2) return { narrator: m2[1].trim(), text: m2[2].trim() }
-  const m3 = text.match(/^(.+?)\s+(?:said|reported)\s*:\s*(.+)$/s)
-  if (m3 && m3[1].split(' ').length <= 5) return { narrator: m3[1].trim(), text: m3[2].trim() }
-  return { narrator: null, text }
-}
-
-function parseHadith(raw) {
-  const en = Array.isArray(raw.hadith) ? raw.hadith.find(h => h.lang === 'en') : null
-  const ar = Array.isArray(raw.hadith) ? raw.hadith.find(h => h.lang === 'ar') : null
-  if (!en) return null
-  const { narrator, text } = parseHadithBody(en.body)
-  if (!text || text.length < 10) return null
-  const arabicText = ar ? cleanHtml(ar.body) : null
-  const grade = en.grades?.[0]?.grade || null
-  const cLabel = COLLECTION_LABELS[raw.collection] || raw.collection
-  return {
-    id: `${raw.collection}_${raw.hadithNumber}`,
-    collection: raw.collection,
-    collectionLabel: cLabel,
-    bookNumber: raw.bookNumber,
-    hadithNumber: raw.hadithNumber,
-    chapterTitle: en.chapterTitle || '',
-    narrator,
-    text,
-    arabicText,
-    grade,
-    reference: `${cLabel} ${raw.bookNumber}:${raw.hadithNumber}`,
-    sourceUrl: `https://sunnah.com/${raw.collection}:${raw.hadithNumber}`,
+function buildBooksFromHadiths(hadiths) {
+  const bookMap = new Map()
+  for (const h of hadiths) {
+    const bn = String(h.bookNumber)
+    if (!bookMap.has(bn)) {
+      bookMap.set(bn, { bookNumber: bn, name: h.chapterTitle || `Book ${bn}`, count: 0 })
+    }
+    bookMap.get(bn).count++
   }
+  return Array.from(bookMap.values())
+    .sort((a, b) => Number(a.bookNumber) - Number(b.bookNumber))
+    .map(b => ({ bookNumber: b.bookNumber, book: [{ lang: 'en', name: b.name }], numberOfHadith: b.count }))
 }
 
 function getDisplayMode() {
@@ -352,16 +320,15 @@ export default function HadithBrowsePage() {
   const isSaved = state?.type === 'saved'
   const showBookList = isCollection && selectedBook === null
 
-  // Fetch books
+  // Load books by lazy-importing the collection JSON and grouping by bookNumber
   const fetchBooks = useCallback(async () => {
     if (!state || !isCollection) return
     setBooksLoading(true)
     setBooksError(null)
     try {
-      const res = await fetch(`/api/sunnah/v1/collections/${state.id}/books?limit=100`)
-      if (!res.ok) throw new Error(`Server returned ${res.status}`)
-      const json = await res.json()
-      setBooks(json.data || [])
+      const allHadiths = await loadCollection(state.id)
+      if (!allHadiths) throw new Error('Collection not found')
+      setBooks(buildBooksFromHadiths(allHadiths))
     } catch (e) {
       setBooksError(e.message)
     } finally {
@@ -369,10 +336,9 @@ export default function HadithBrowsePage() {
     }
   }, [state])
 
-  // Fetch hadiths
-  const doFetch = useCallback(async (pageNum, append = false) => {
+  // Load hadiths by lazy-importing the collection JSON and filtering/slicing locally
+  const doFetch = useCallback(async (pageNum) => {
     if (!state) return
-    // Saved collections load from localStorage
     if (isSaved) {
       const items = getItemsInCollection(state.collectionId)
       setHadiths(items.map(i => i.hadith))
@@ -388,15 +354,12 @@ export default function HadithBrowsePage() {
       collectionId = state.collection
       bookNum = state.book
     }
-    const url = `/api/sunnah/v1/collections/${collectionId}/books/${bookNum}/hadiths?limit=20&page=${pageNum}`
     try {
-      const res = await fetch(url)
-      if (!res.ok) throw new Error(`Server returned ${res.status}`)
-      const json = await res.json()
-      const rawList = Array.isArray(json.data) ? json.data : (json.hadiths || [])
-      const parsed = rawList.map(parseHadith).filter(Boolean)
-      setHadiths(prev => append ? [...prev, ...parsed] : parsed)
-      setHasMore(json.next != null && parsed.length > 0)
+      const allHadiths = await loadCollection(collectionId)
+      if (!allHadiths) throw new Error(`Collection "${collectionId}" not found`)
+      const bookHadiths = allHadiths.filter(h => String(h.bookNumber) === String(bookNum))
+      setHadiths(bookHadiths.slice(0, pageNum * PAGE_SIZE))
+      setHasMore(bookHadiths.length > pageNum * PAGE_SIZE)
     } catch (e) {
       setError(e.message)
     }
@@ -428,7 +391,7 @@ export default function HadithBrowsePage() {
   const loadMore = async () => {
     setLoadingMore(true)
     const next = page + 1
-    await doFetch(next, true)
+    await doFetch(next)
     setPage(next)
     setLoadingMore(false)
   }

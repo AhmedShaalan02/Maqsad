@@ -10,6 +10,25 @@ import { getHijriDate, formatGregorian } from '../utils/hijriUtils'
 import { getIslamicSignificance } from '../data/islamicDates'
 import { requestLocation, calcPrayerTimes, getNextPrayer, formatCountdown } from '../utils/prayerUtils'
 import { getLibraryCounts } from '../utils/myMaqsadStorage'
+import { loadCollection } from '../utils/hadithLoader'
+
+const HADITH_COLLECTIONS = ['bukhari', 'muslim', 'tirmidhi', 'abudawud', 'ibnmajah', 'nasai']
+
+async function searchHadiths(q, limit = 5) {
+  const results = []
+  for (const col of HADITH_COLLECTIONS) {
+    if (results.length >= limit) break
+    const hadiths = await loadCollection(col)
+    if (!hadiths) continue
+    for (const h of hadiths) {
+      if (results.length >= limit) break
+      if (h.text?.toLowerCase().includes(q) || (h.narrator || '').toLowerCase().includes(q)) {
+        results.push(h)
+      }
+    }
+  }
+  return results
+}
 
 const chapters = surahData.chapters
 
@@ -173,17 +192,18 @@ export default function HomePage() {
 
   const totalSaved = libCounts.dailyThemes + libCounts.quranVerses + libCounts.hadiths
 
-  // Debounced content search — queries actual verse + hadith text via server
+  // Debounced content search — loads hadith collections on demand, queries verse text via server
   useEffect(() => {
     const q = query.trim()
     if (q.length < 2) { setVerseResults([]); setHadithResults([]); return }
     const timer = setTimeout(async () => {
+      const ql = q.toLowerCase()
       const [vRes, hRes] = await Promise.allSettled([
-        fetch(`/api/verse-search?q=${encodeURIComponent(q)}&limit=5`),
-        fetch(`/api/hadith-search?q=${encodeURIComponent(q)}&limit=5`),
+        fetch(`/api/verse-search?q=${encodeURIComponent(q)}&limit=5`).then(r => r.ok ? r.json() : []),
+        searchHadiths(ql, 5),
       ])
-      setVerseResults(vRes.status === 'fulfilled' && vRes.value.ok ? await vRes.value.json() : [])
-      setHadithResults(hRes.status === 'fulfilled' && hRes.value.ok ? await hRes.value.json() : [])
+      setVerseResults(vRes.status === 'fulfilled' ? vRes.value : [])
+      setHadithResults(hRes.status === 'fulfilled' ? hRes.value : [])
     }, 350)
     return () => clearTimeout(timer)
   }, [query])

@@ -3,6 +3,7 @@ import dailyThemes from '../data/dailyThemes.json'
 import GoldDivider from './GoldDivider'
 import { gradeStyle } from '../utils/gradeUtils'
 import { COLLECTION_LABELS } from '../data/hadithData'
+import { loadCollection } from '../utils/hadithLoader'
 import { dateKey } from '../utils/hijriUtils'
 import { saveDailyTheme, getDailyTheme, saveReflection } from '../utils/myMaqsadStorage'
 import surahData from '../data/surahs.json'
@@ -28,8 +29,9 @@ async function loadVerse(surahNum, verseNum) {
 
 async function loadHadith(collection, number) {
   try {
-    const res = await fetch(`/api/hadith-lookup?collection=${collection}&number=${number}`)
-    return res.ok ? res.json() : null
+    const hadiths = await loadCollection(collection)
+    if (!hadiths) return null
+    return hadiths.find(h => h.hadithNumber === number || h.hadithNumber === String(number)) ?? null
   } catch { return null }
 }
 
